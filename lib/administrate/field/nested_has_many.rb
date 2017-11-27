@@ -20,6 +20,18 @@ module Administrate
         end
       end
 
+      def nested_fields_for_builder(form_builder)
+        return nested_fields unless form_builder.index.is_a? Integer
+
+        nested_fields.each do |nested_field|
+          next if nested_field.resource.blank?
+
+          # Injecting current data into field
+          resource = nested_field.resource[form_builder.index]
+          nested_field.instance_variable_set '@data', resource.send(nested_field.attribute)
+        end
+      end
+
       def to_s
         data
       end
@@ -36,7 +48,7 @@ module Administrate
       def self.permitted_attribute(associated_resource)
         {
           "#{associated_resource}_attributes".to_sym =>
-          associated_attributes(associated_resource),
+          associated_attributes(associated_resource)
         }
       end
 
@@ -49,7 +61,7 @@ module Administrate
       end
 
       def associated_form
-        Administrate::Page::Form.new(associated_dashboard, association_name)
+        Administrate::Page::Form.new(associated_dashboard, data)
       end
 
       private
